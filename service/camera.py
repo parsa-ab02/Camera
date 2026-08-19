@@ -1,17 +1,30 @@
+import subprocess
+from pathlib import Path
+
 class Camera:
+    video_device: Path
 
-    @classmethod
-    def stream(cls):
+    def __init__(self,video_device: Path):
+        self.video_device = video_device
+
+    def stream(self):
         ...
 
-    @classmethod
-    def capture(cls):
+    def capture(self, width, height):
+        v4l2_cmd = [
+            "v4l2-ctl",
+            f"--device={self.video_device}",
+            f"--set-fmt-video=width={width},height={height},pixelformat=YUYV",
+            "--stream-mmap",
+            "--stream-count=1",
+            "--stream-to=-",
+        ]
+        capture_image = subprocess.run(v4l2_cmd,stdout=subprocess.PIPE,check=True,)
+
+        return capture_image.stdout
+
+    def start_record(self):
         ...
 
-    @classmethod
-    def start_record(cls):
-        ...
-
-    @classmethod
-    def stop_record(cls):
+    def stop_record(self):
         ...
