@@ -1,3 +1,5 @@
+import cv2
+
 class CameraControl:
 
     @classmethod

@@ -19,7 +19,10 @@ class Camera:
         self._history = []
 
     def run(self, width, height, fps):
-        self.streamThread = threading.Thread(target=self._stream, args=(width, height, fps))
+        self.streamThread = threading.Thread(
+            target=self._stream,
+            args=(width, height, fps)
+        )
 
         self.streamThread.start()
 
@@ -65,3 +68,8 @@ class Camera:
         self._is_recording = False
         self._history.append(self._video)
         self._video = []
+
+    def save():
+        for item in _history:
+            ...
+        
