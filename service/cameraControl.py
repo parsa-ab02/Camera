@@ -1,6 +1,8 @@
 import cv2
+import Camera
 
 class CameraControl:
+    camera: Camera
 
     @classmethod
     def set_bightness(cls): # range 0 - 255
