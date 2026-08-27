@@ -1,5 +1,6 @@
 import cv2
 import Camera
+import subprocess
 
 class CameraControl:
     def __init__(self, camera: Camera):
@@ -149,8 +150,35 @@ class CameraControl:
 
     # POWER LINE FREQUENCY --- --- ---
 
+    # IMPORTANT NOTE : The following methods (power line frequency) will only work on linux devices with v4l2-ctl
+    # The reason is the power line frequency (anti-flicker) setting is handled at the hardware or operating system driver level
+    # If you are running this code on other OS, be careful !
+
     def set_power_line_frequency(self, value: int): # range 0 - 2
-        ...
+        if not 0 <= value <= 2:
+            raise RuntimeError("invalid power line frequency value")
+
+        command = ["v4l2-ctl", "-d", str(self._camera._path), f"--set-ctrl=power_line_frequency={value}"]
+
+        try:
+            subprocess.run(command, capture_output=True, text=True, check=True)
+        except(subprocess.CalledProcessError, FileNotFoundError) as e:
+            raise RuntimeError(f"failed to set power line frequency : {e}") from e
+
+        if self.get_power_line_frequency() != value:
+            raise Exception("power line setting failed")
+
+        return
 
     def get_power_line_frequency(self):
-        ...
+        command = ["v4l2-ctl", "-d", str(self._camera._path), "--get-ctrl=power_line_frequency"]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+        except(subprocess.CalledProcessError, FileNotFoundError) as e:
+            raise RuntimeError(f"failed to get power line frequency : {e}") from e
+
+        try:
+            return int(result.stdout.strip().split(":")[-1].strip())
+        except (ValueError, IndexError) as e:
+            raise RuntimeError(f"Unexpected v4l2-ctl output: {result.stdout!r}") from e
