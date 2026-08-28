@@ -3,8 +3,11 @@ import threading
 import datetime
 
 class Camera:
-    def __init__(self, camera_id=0):
-        self._camera: cv2.VideoCapture | None = cv2.VideoCapture(camera_id)
+    def __init__(self, source: str | int = 0):
+        self._camera: cv2.VideoCapture | None = cv2.VideoCapture(source)
+
+        if not self._camera.isOpened():
+            raise RuntimeError("Video device source is not valid")
 
         self._is_recording: bool = False
         self._is_streaming: bool = False
