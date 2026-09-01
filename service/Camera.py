@@ -1,13 +1,28 @@
 import cv2
 import threading
 import datetime
+import sounddevice as sd
+import queue
 
 class Camera:
-    def __init__(self, source: str | int = 0):
-        self._camera: cv2.VideoCapture | None = cv2.VideoCapture(source)
+    def __init__(self, video_source: str | int = 0, audio_source: str | int | None = None, audio_frequency: int = 48000):
+        self._camera = cv2.VideoCapture(video_source)
 
         if not self._camera.isOpened():
             raise RuntimeError("Video device source is not valid")
+
+        self._video_source = video_source
+
+        self._audio_queue = queue.Queue()
+        self._audio = sd.InputStream(
+            device=audio_source,
+            samplerate=48000,
+            channels=2,
+            dtype="int16"
+        )
+
+        self._audio_source = audio_source
+        self._audio_frequency = audio_frequency
 
         self._is_recording: bool = False
         self._is_streaming: bool = False
@@ -94,16 +109,19 @@ class Camera:
             raise RuntimeError("could not create video file")
 
         self._writer = writer
+
+        while not self._audio_queue.empty():
+            self._audio_queue.get_nowait()
+
+        self._audio.start()
         self._is_recording = True
 
     def end_record(self):
-        if self._is_recording:
+        if not self._is_recording:
+            raise RuntimeError("recording not started")
 
-            self._is_recording = False
-            self._writer.release()
+        self._writer.release()
+        self._audio.stop()
+        self._is_recording = False
 
-            self._writer = None
-
-        else :
-            raise Exception("recording not started")
-        
+        self._writer = None

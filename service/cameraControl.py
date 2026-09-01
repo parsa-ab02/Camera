@@ -1,5 +1,5 @@
 import cv2
-import Camera
+from Camera import Camera
 import subprocess
 
 class CameraControl:
@@ -158,6 +158,8 @@ class CameraControl:
         if not 0 <= value <= 2:
             raise RuntimeError("invalid power line frequency value")
 
+        if not isinstance(self._camera._video_source, str):
+            return
         command = ["v4l2-ctl", "-d", str(self._camera._path), f"--set-ctrl=power_line_frequency={value}"]
 
         try:
@@ -171,6 +173,8 @@ class CameraControl:
         return
 
     def get_power_line_frequency(self):
+        if not isinstance(self._camera._video_source, str):
+            return
         command = ["v4l2-ctl", "-d", str(self._camera._path), "--get-ctrl=power_line_frequency"]
 
         try:
